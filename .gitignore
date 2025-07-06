@@ -1,0 +1,42 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Ambiente virtual
+.venv/
+env/
+ENV/
+venv/
+*.env
+
+# Arquivos de configuração sensíveis
+.env
+.env.*
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Jupyter notebooks (se usar futuramente)
+.ipynb_checkpoints/
+
+# Arquivos temporários
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+Thumbs.db
+
+# Arquivos de dados gerados
+data/export.csv
+*.sqlite3
+
+# Coverage / Testes
+.coverage
+htmlcov/
+.cache/
+pytest_cache/
