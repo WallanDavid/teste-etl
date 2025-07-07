@@ -1,8 +1,12 @@
 from sqlalchemy.orm import Session
 from .models import Venda
-from datetime import date
+from datetime import date, datetime
 
 def criar_venda(db: Session, venda_data: dict):
+    # ✅ Converte a data_venda de string para datetime.date, se necessário
+    if isinstance(venda_data.get("data_venda"), str):
+        venda_data["data_venda"] = datetime.strptime(venda_data["data_venda"], "%Y-%m-%d").date()
+
     venda = Venda(**venda_data)
     db.add(venda)
     db.commit()
