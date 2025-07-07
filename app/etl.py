@@ -2,7 +2,7 @@ import pandas as pd
 import io
 from datetime import datetime
 
-def processar_csv(arquivo_csv: bytes):
+def processar_csv(arquivo_csv: bytes) -> pd.DataFrame:
     """
     Processa um CSV em memória, sanitiza os dados e retorna um DataFrame limpo.
     """
@@ -23,11 +23,19 @@ def processar_csv(arquivo_csv: bytes):
 
     return df
 
-
-def gerar_relatorio_mensal(df: pd.DataFrame, mes: str):
+def gerar_relatorio_mensal(df: pd.DataFrame, mes: str) -> dict:
     """
     Gera um dicionário com resumo mensal de vendas.
     """
+    if df.empty or 'data_venda' not in df.columns:
+        return {
+            "mes": mes,
+            "total_vendas": 0.0,
+            "total_itens": 0,
+            "vendas_por_categoria": {},
+            "top_vendedor": None
+        }
+
     df['data_venda'] = pd.to_datetime(df['data_venda'], errors='coerce')
     df['mes'] = df['data_venda'].dt.to_period("M").astype(str)
     df_mes = df[df['mes'] == mes]
@@ -49,21 +57,23 @@ def gerar_relatorio_mensal(df: pd.DataFrame, mes: str):
         df_mes
         .groupby('categoria', group_keys=False)
         .apply(lambda x: (x['preco'] * x['quantidade']).sum())
+        .dropna()
         .to_dict()
     )
 
-    # Top vendedor com segurança
+    # Vendas por vendedor
     vendas_por_vendedor = (
         df_mes
         .groupby('vendedor', group_keys=False)
         .apply(lambda x: (x['preco'] * x['quantidade']).sum())
+        .dropna()
     )
 
-    top_vendedor = None
-    if not vendas_por_vendedor.empty:
-        vendas_por_vendedor = vendas_por_vendedor.dropna().astype(float)
-        if not vendas_por_vendedor.empty:
-            top_vendedor = vendas_por_vendedor.idxmax()
+    # Corrigido: garante que o idxmax funcione com tipos compatíveis
+    top_vendedor = (
+        vendas_por_vendedor.astype(float).idxmax()
+        if not vendas_por_vendedor.empty else None
+    )
 
     return {
         "mes": mes,
