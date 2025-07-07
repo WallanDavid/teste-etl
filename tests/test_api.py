@@ -1,14 +1,14 @@
 import pytest
-import requests
 import pandas as pd
-import time
+from fastapi.testclient import TestClient
+from app.main import app
 
-BASE_URL = "http://localhost:8000"
+client = TestClient(app)
 
 @pytest.fixture(scope="session", autouse=True)
-def esperar_api_subir():
-    """Aguarda a API iniciar antes de rodar os testes"""
-    time.sleep(3)
+def setup_teste():
+    """Simula um tempo de setup antes dos testes"""
+    pass  # Se quiser manter o sleep(3), pode, mas TestClient não precisa disso.
 
 
 def test_criar_e_buscar_venda():
@@ -22,17 +22,17 @@ def test_criar_e_buscar_venda():
         "regiao": "Nordeste"
     }
 
-    r = requests.post(f"{BASE_URL}/vendas", json=venda)
+    r = client.post("/vendas", json=venda)
     assert r.status_code == 201, f"Erro ao criar: {r.text}"
     venda_id = r.json().get("id")
     assert venda_id, "ID da venda não retornado"
 
-    r = requests.get(f"{BASE_URL}/vendas/{venda_id}")
+    r = client.get(f"/vendas/{venda_id}")
     assert r.status_code == 200, f"Erro ao buscar: {r.text}"
 
 
 def test_listar_vendas():
-    r = requests.get(f"{BASE_URL}/vendas")
+    r = client.get("/vendas")
     assert r.status_code == 200
     assert isinstance(r.json(), list), "Resposta não é lista"
 
@@ -47,15 +47,15 @@ def test_importar_csv():
         'vendedor': ['Carlos', 'Marina'],
         'regiao': ['Sul', 'Centro-Oeste']
     })
-    csv = df.to_csv(index=False)
+    csv = df.to_csv(index=False).encode('utf-8')
     files = {'file': ('teste.csv', csv, 'text/csv')}
 
-    r = requests.post(f"{BASE_URL}/etl/importar-csv", files=files)
+    r = client.post("/etl/importar-csv", files=files)
     assert r.status_code == 200, f"Erro ao importar CSV: {r.text}"
 
 
 def test_relatorio_mensal():
-    r = requests.get(f"{BASE_URL}/etl/relatorio-mensal?mes=2024-02")
+    r = client.get("/etl/relatorio-mensal?mes=2024-02")
     assert r.status_code == 200
     data = r.json()
     assert "total_vendas" in data
