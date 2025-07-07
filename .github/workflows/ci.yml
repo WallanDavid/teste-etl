@@ -22,11 +22,20 @@ jobs:
     - name: Instala dependências
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt || true
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install pytest faker httpx fastapi uvicorn sqlalchemy pandas
 
     - name: Exporta variáveis de ambiente
       run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+
+    - name: Verifica variável DATABASE_URL
+      run: |
+        if [ -z "$DATABASE_URL" ]; then
+          echo "DATABASE_URL não está definida!"
+          exit 1
+        else
+          echo "DATABASE_URL detectada: $DATABASE_URL"
+        fi
 
     - name: Roda testes
       run: pytest tests/ --maxfail=1 --disable-warnings -v
